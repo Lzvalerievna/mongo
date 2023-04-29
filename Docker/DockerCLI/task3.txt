@@ -1,0 +1,20 @@
+docker pull node:15.14
+15.14: Pulling from library/node
+bfde2ec33fbc: Already exists                                                                                                                                                                                                   
+787f5e2f1047: Already exists                                                                                                                                                                                                   
+7b6173a10eb8: Already exists                                                                                                                                                                                                   
+dc05be471d51: Already exists                                                                                                                                                                                                   
+55fab5cadd3c: Already exists                                                                                                                                                                                                   
+bd821d20ef8c: Already exists                                                                                                                                                                                                   
+6041b69671c6: Already exists                                                                                                                                                                                                   
+989c5d2d2313: Already exists                                                                                                                                                                                                   
+4b57d41e8391: Already exists                                                                                                                                                                                                   
+Digest: sha256:608bba799613b1ebf754034ae008849ba51e88b23271412427b76d60ae0d0627
+Status: Downloaded newer image for node:15.14
+docker.io/library/node:15.14
+
+docker run -d --name first_node -v %cd%/var/first/data node:15.14
+f42864d027004fc097e041997c4dfbf264ce81e917236b4dbf0eb32b8b74d7b7
+
+docker run -d --name second_node -v %cd%:/var/second/data node:15.14
+e7f75e176b4f4237be47aee1dd4945d5ad2031ae3fd40783a4886e8e2e157f3d
