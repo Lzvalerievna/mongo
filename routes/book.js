@@ -1,12 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const { v4: uuid } = require('uuid');
+const { v4: uuid } = require('uuid'); 
+const redis = require('redis');
+
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost';
+
+const client = redis.createClient({url: REDIS_URL});
+
+(async () => {
+    await client.connect();
+})(); 
 
 class Book {
-    constructor(title = "", desc = "", id = uuid()) {
+    constructor(title = "", desc = "", id = uuid(), counter ="") {
         this.title = title;
         this.desc = desc;
         this.id = id;
+        this.counter = id;
     }
 }
 const stor = {
@@ -43,10 +53,13 @@ router.post('/create', (req, res) => {
     res.redirect('/');
 });
 
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
     const {books} = stor;
     const {id} = req.params;
     const idx = books.findIndex(el => el.id === id);
+
+    const cnt = await client.incr(id);
+    console.log(cnt);
 
     if (idx === -1) {
         res.redirect('/404');
@@ -55,6 +68,7 @@ router.get('/:id', (req, res) => {
     res.render("book/view", {
         title: "Информация по книге",
         books: books[idx],
+        counter: cnt,
     });
     
 });

@@ -1,5 +1,6 @@
 const express = require('express');
 
+
 const errorMiddleware = require('./middleware/error');
 
 const indexRouter = require('./routes/index');
@@ -15,11 +16,7 @@ app.use('/book', todoRouter);
 app.use(errorMiddleware);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT);
 
-{
-    {
-        {
-        }
-    }
-}
+app.listen(PORT, () => {
+    console.log(`Сервер слушает на порту ${PORT}`);
+});
