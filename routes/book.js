@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { v4: uuid } = require('uuid'); 
 const redis = require('redis');
+const Books = require('../models/books');
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost';
 
@@ -11,113 +11,99 @@ const client = redis.createClient({url: REDIS_URL});
     await client.connect();
 })(); 
 
-class Book {
-    constructor(title = "", desc = "", id = uuid(), counter ="") {
-        this.title = title;
-        this.desc = desc;
-        this.id = id;
-        this.counter = id;
+router.get('/', async (req, res) => {
+
+    try {
+        const books = await Books.find().select('-__v');
+        res.render("book/index", {
+           title: "Список книг",
+           books: books,
+        });
+    }catch (e) {
+        res.json(e);
     }
-}
-const stor = {
-    books: [],
-};
-
-[1, 2, 3].map(el => {
-    const newBook = new Book(`book ${el}`, `desc book ${el}`);
-    stor.books.push(newBook);
-});
-
-router.get('/', (req, res) => {
-    const {books} = stor;
-    res.render("book/index", {
-        title: "Список книг",
-        books: books,
-    });
 });
 
 router.get('/create', (req, res) => {
+    
     res.render("book/create", {
         title: "Создать книгу",
         book: {},
     });
 });
 
-router.post('/create', (req, res) => {
-    const {books} = stor;
+router.post('/create', async (req, res) => {
+
     const {title, desc} = req.body;
+    const book = new Books({title,desc});
 
-    const newBook = new Book(title, desc);
-    books.push(newBook);
-
-    res.redirect('/');
+    try {
+        await book.save();
+        res.redirect('/book');
+    }catch (e) {
+        res.status(500).json(e);
+    }
 });
 
 router.get('/:id', async (req, res) => {
-    const {books} = stor;
+
     const {id} = req.params;
-    const idx = books.findIndex(el => el.id === id);
 
-    const cnt = await client.incr(id);
-    console.log(cnt);
-
-    if (idx === -1) {
-        res.redirect('/404');
-    } 
-        
-    res.render("book/view", {
-        title: "Информация по книге",
-        books: books[idx],
-        counter: cnt,
-    });
+    try {
+        const book = await Books.findById(id).select('-__v');
+        const cnt = await client.incr(id);
+        res.render("book/view", {
+            title: "Информация по книге",
+            book: book,
+            counter: cnt,
+        });  
+    }catch (e) {
+        res.status(404).json(e);
+    }
     
 });
 
-router.get('/update/:id', (req, res) => {
-    const {books} = stor;
+router.get('/update/:id', async (req, res) => {
     const {id} = req.params;
-    const idx = books.findIndex(el => el.id === id);
 
-    if (idx === -1) {
-        res.redirect('/404');
-    } 
-
-    res.render("book/update", {
-        title: "Редактирование книги",
-        books: books[idx],
-    });
+    try{
+        const book = await Books.findById(id).select('-__v');
+        await  res.render("book/update", {
+            title: "Редактирование книги",
+            book: book,
+        });
+    }catch (e) {
+        res.status(404).json(e);
+    }
 });
 
-router.post('/update/:id', (req, res) => {
-    const {books} = stor;
+router.post('/update/:id', async (req, res) => {
+
     const {id} = req.params;
     const {title, desc} = req.body;
-    const idx = books.findIndex(el => el.id === id);
-
-    if (idx === -1) {
-        res.redirect('errors/404');
-    } 
-
-    books[idx] = {
-        ...books[idx],
-        title,
-        desc,
-    };
-    res.redirect(`/`);
+    
+    try {
+        await Books.findByIdAndUpdate(id, {title, desc});
+        res.redirect('/');
+    }catch (e) {
+        res.status(404).json(e);
+    }
 });
 
-router.post('/delete/:id', (req, res) => {
-    const {books} = stor;
+router.post('/delete/:id', async (req, res) => {
+
     const {id} = req.params;
-    const idx = books.findIndex(el => el.id === id);
 
-    if (idx === -1) {
-        res.redirect('/404');
-    } 
-
-    books.splice(idx, 1);
-    res.redirect(`/`);
+    try {
+        await Books.deleteOne({ _id: id });
+        await res.redirect('/');
+    }catch (e) {
+        res.json('404');
+    }
 });
+
+
+
 
 module.exports = router;
 

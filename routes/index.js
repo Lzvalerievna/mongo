@@ -11,6 +11,7 @@ const client = redis.createClient({url: REDIS_URL});
 })(); 
 
 router.get('/', (req, res) => {
+
     res.render('index', {
         title: 'Главная',
     });
